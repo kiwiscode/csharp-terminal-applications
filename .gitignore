@@ -52,6 +52,7 @@ TestResults/
 *.backup
 *.swp
 *.tmp
+*.DS_Store
 
 # User-specific
 *.userprefs
