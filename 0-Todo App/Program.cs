@@ -22,19 +22,13 @@ static class Program
 
         }
 
+
         do
         {
             bool repeatAuthModeQuestion = false;
             bool keepDashboard = false;
             string? dashboardAction = "";
             string? error = "";
-
-
-            //  var key = Console.ReadKey(intercept: true);
-            // if (key.Key == ConsoleKey.Backspace)
-            // {
-            //     dashboardAction = "/task-settings";
-            // }
 
 
             do
@@ -153,7 +147,6 @@ static class Program
             {
                 if (dashboardAction == "/create-task")
                 {
-
                     var taskCategory = AnsiConsole.Prompt(
                         new SelectionPrompt<string>()
                             .Title("[bold rgb(85,88,253)]Please select a category:[/]")
@@ -161,6 +154,8 @@ static class Program
                             .AddChoices("[rgb(254,203,95)]Work[/]", "[rgb(225,133,242)]Personal[/]",
                                         "[rgb(190,229,253)]Family[/]", "[rgb(166,255,235)]Pet[/]")
                     );
+
+
 
 
                     string cleanCategory = taskCategory.Replace("[rgb(254,203,95)]", "")
@@ -196,7 +191,6 @@ static class Program
 
                         if (result == HttpStatus.BAD_REQUEST)
                         {
-
                             RenderError("You cannot create more than 10 tasks for this user.");
                         }
                         else if (result == HttpStatus.CREATED)
@@ -243,6 +237,68 @@ static class Program
                 else if (dashboardAction == "/delete-all")
                 {
                     bool confirm = AnsiConsole.Confirm("[bold yellow]Do you want to delete all tasks?[/]");
+
+                    if (confirm)
+                    {
+
+
+                        int result = TaskController.DeleteAllTask(username);
+
+                        if (result == HttpStatus.OK)
+                        {
+                            AnsiConsole.MarkupLine("[green]All tasks have been deleted successfully![/]");
+
+
+                            AnsiConsole.Progress()
+                                .Start(ctx =>
+                                {
+                                    var showTasks = ctx.AddTask("[green]Tasks loading[/]", maxValue: 100);
+                                    while (!showTasks.IsFinished)
+                                    {
+                                        showTasks.Increment(1.5);
+                                        Thread.Sleep(50);
+                                    }
+                                });
+
+                            dashboardAction = "/tasks";
+
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[red]Tasks deletion canceled.[/]");
+
+                            AnsiConsole.Progress()
+                                .Start(ctx =>
+                                {
+                                    var showTasks = ctx.AddTask("[green]Tasks loading[/]", maxValue: 100);
+                                    while (!showTasks.IsFinished)
+                                    {
+                                        showTasks.Increment(1.5);
+                                        Thread.Sleep(50);
+                                    }
+                                });
+                            dashboardAction = "/tasks";
+                        }
+
+
+
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine("[red]Task creation canceled.[/]");
+
+                        AnsiConsole.Progress()
+                            .Start(ctx =>
+                            {
+                                var showTasks = ctx.AddTask("[green]Tasks loading[/]", maxValue: 100);
+                                while (!showTasks.IsFinished)
+                                {
+                                    showTasks.Increment(1.5);
+                                    Thread.Sleep(50);
+                                }
+                            });
+                        dashboardAction = "/tasks";
+                    }
                 }
                 else if (dashboardAction == "/tasks")
                 {

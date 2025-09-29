@@ -34,7 +34,6 @@ public class TaskController
 
         if (userTaskCount == 10)
         {
-
             return HttpStatus.BAD_REQUEST;
         }
 
@@ -53,5 +52,17 @@ public class TaskController
         TaskDataUtils.SaveTasks(loadedTasks);
 
         return HttpStatus.CREATED;
+    }
+
+
+    public static int DeleteAllTask(string? username)
+    {
+        var loadedTasks = TaskDataUtils.LoadTasks();
+
+        var filteredTasks = loadedTasks.Where((t) => t.Username != username).ToList();
+
+        TaskDataUtils.SaveTasks(filteredTasks);
+
+        return HttpStatus.OK;
     }
 }
