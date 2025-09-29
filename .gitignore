@@ -56,4 +56,5 @@ TestResults/
 
 # User-specific
 *.userprefs
-0-Todo App/users.json
+*tasks.json
+*users.json

@@ -30,118 +30,110 @@ static class Program
             string? error = "";
 
 
+            //  var key = Console.ReadKey(intercept: true);
+            // if (key.Key == ConsoleKey.Backspace)
+            // {
+            //     dashboardAction = "/task-settings";
+            // }
+
+
             do
             {
-                Console.Write("Already using Todo App? Log in [Y/N]: ");
 
-                authMode = Console.ReadLine();
+                bool confirm = AnsiConsole.Confirm("[bold yellow]Already using Todo App? Log in[/]");
 
-                if (!string.IsNullOrEmpty(authMode))
+                if (confirm)
                 {
-                    if (string.Equals(authMode, "y", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        do
-                        {
-                            authMode = "login";
-
-                            Console.Write("Your username: ");
-                            username = Console.ReadLine();
-                            Console.Write("Your password: ");
-                            string? password = PasswordUtils.ReadPassword();
-
-
-                            // login
-                            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-                            {
 
 
 
-                                int result = UserController.LoginUser(username, password);
 
-                                if (result == HttpStatus.NOT_FOUND)
-                                {
-                                    ThrowErrorUtils.ThrowError(HttpStatus.NOT_FOUND, "User not found!");
-                                }
-                                else if (result == HttpStatus.UNAUTHORIZED)
-                                {
-                                    ThrowErrorUtils.ThrowError(HttpStatus.UNAUTHORIZED, "Invalid credentials!");
-                                }
-                                else if (result == HttpStatus.OK)
-                                {
-                                    repeatAuthModeQuestion = false;
-                                    authMode = "";
-                                    keepDashboard = true;
-                                    dashboardAction = "/tasks";
-                                    using (var progress = new ProgressBar())
-                                    {
-                                        for (int i = 0; i <= 100; i++)
-                                        {
-                                            progress.Report((double)i / 100);
-                                            Thread.Sleep(20);
-                                        }
-                                    }
-                                    Console.WriteLine($"Welcome to your dashboard {username} 👋");
-                                }
-                            }
+                    string username = AnsiConsole.Ask<string>("[bold rgb(85,88,253)]Your username:[/]");
 
-                        } while (authMode == "login");
-                    }
-                    else if (string.Equals(authMode, "n", StringComparison.CurrentCultureIgnoreCase))
+
+                    var password = AnsiConsole.Prompt(
+                    new TextPrompt<string>("[bold rgb(85,88,253)]Your password:[/]")
+                     .Secret()
+                    );
+
+
+                    // login
+                    if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
 
+                        int result = UserController.LoginUser(username, password);
 
-                        authMode = "register";
-                        Console.Write("Please enter your username: ");
-                        string? username = Console.ReadLine();
-                        Console.Write("Please enter your password: ");
-                        string? password = PasswordUtils.ReadPassword();
-
-                        // register
-                        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                        if (result == HttpStatus.NOT_FOUND)
                         {
-
-
-                            int result = UserController.RegisterUser(username, PasswordUtils.HashPassword(password));
-
-
-                            if (result == HttpStatus.CONFLICT)
-                            {
-
-                                ThrowErrorUtils.ThrowError(HttpStatus.CONFLICT, "User already exists!");
-                                repeatAuthModeQuestion = true;
-                                authMode = "login";
-                            }
-                            else if (result == HttpStatus.CREATED)
-                            {
-                                using (var progress = new ProgressBar())
-                                {
-                                    for (int i = 0; i <= 100; i++)
-                                    {
-                                        progress.Report((double)i / 100);
-                                        Thread.Sleep(20);
-                                    }
-                                }
-                                Console.WriteLine($"Welcome to your dashboard {username} 👋");
-                                repeatAuthModeQuestion = false;
-                                keepDashboard = true;
-                                dashboardAction = "/tasks";
-                            }
+                            ThrowErrorUtils.ThrowError(HttpStatus.NOT_FOUND, "User not found!");
                         }
+                        else if (result == HttpStatus.UNAUTHORIZED)
+                        {
+                            ThrowErrorUtils.ThrowError(HttpStatus.UNAUTHORIZED, "Invalid credentials!");
+                        }
+                        else if (result == HttpStatus.OK)
+                        {
+                            repeatAuthModeQuestion = false;
+                            keepDashboard = true;
+                            dashboardAction = "/tasks";
+                            using (var progress = new ProgressBar())
+                            {
+                                for (int i = 0; i <= 100; i++)
+                                {
+                                    progress.Report((double)i / 100);
+                                    Thread.Sleep(20);
+                                }
+                            }
+                            AnsiConsole.MarkupLine($"[bold green]👋 Welcome to your dashboard, [underline yellow]{username}[/]![/]");
+                        }
+                    }
 
-                    }
-                    else
-                    {
-                        Console.WriteLine("Please type Y for Yes or N for No:");
-                        authMode = "";
-                        repeatAuthModeQuestion = true;
-                    }
+
+
                 }
                 else
                 {
-                    Console.WriteLine("Please type Y for Yes or N for No:");
-                    authMode = "";
-                    repeatAuthModeQuestion = true;
+
+
+                    string username = AnsiConsole.Ask<string>("[bold rgb(85,88,253)]Please enter your username:[/]");
+                    var password = AnsiConsole.Prompt(
+                    new TextPrompt<string>("[bold rgb(85,88,253)]Please enter your password:[/]")
+                     .Secret()
+                    );
+
+                    // register
+                    if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                    {
+
+
+                        int result = UserController.RegisterUser(username, PasswordUtils.HashPassword(password));
+
+
+                        if (result == HttpStatus.CONFLICT)
+                        {
+
+                            ThrowErrorUtils.ThrowError(HttpStatus.CONFLICT, "User already exists!");
+                            repeatAuthModeQuestion = true;
+                        }
+                        else if (result == HttpStatus.CREATED)
+                        {
+                            using (var progress = new ProgressBar())
+                            {
+                                for (int i = 0; i <= 100; i++)
+                                {
+                                    progress.Report((double)i / 100);
+                                    Thread.Sleep(20);
+                                }
+                            }
+                            Console.WriteLine($"Welcome to your dashboard {username} 👋");
+                            repeatAuthModeQuestion = false;
+                            keepDashboard = true;
+                            dashboardAction = "/tasks";
+                        }
+                    }
+
                 }
+
             } while (repeatAuthModeQuestion);
 
 
@@ -246,30 +238,37 @@ static class Program
 
 
                 }
+                else if (dashboardAction == "/update-task") { }
+                else if (dashboardAction == "/delete-task") { }
+                else if (dashboardAction == "/delete-all")
+                {
+                    bool confirm = AnsiConsole.Confirm("[bold yellow]Do you want to delete all tasks?[/]");
+                }
                 else if (dashboardAction == "/tasks")
                 {
+
+
                     var (userTasks, result) = TaskController.GetTasks(username);
 
+                    var table = new Table();
+                    table.Title = new TableTitle("[bold underline rgb(85,88,253)]Your Tasks[/]");
+                    table.Border = TableBorder.Rounded;
+                    table.Expand();
+
+                    table.AddColumn(new TableColumn("[bold yellow]Category[/]").Centered());
+                    table.AddColumn(new TableColumn("[bold cyan]Description[/]").Centered());
+                    table.AddColumn(new TableColumn("[bold green]Status[/]").Centered());
                     if (result == HttpStatus.NOT_FOUND)
                     {
-                        AnsiConsole.MarkupLine("[red]No tasks found.[/]");
-                        Console.WriteLine("If you want to create a task, type /create-task");
-                        dashboardAction = Console.ReadLine();
-                        Console.WriteLine();
+                        table.ShowRowSeparators();
+                        table.AddRow(
+                        new Markup("[grey]No tasks found[/]"),
+                        new Markup("[grey]-[/]"),
+                        new Markup("[grey]-[/]")
+                );
                     }
                     else
                     {
-
-                        var table = new Table();
-
-                        table.Title = new TableTitle("[bold underline rgb(85,88,253)]Your Tasks[/]");
-                        table.Border = TableBorder.Rounded;
-                        table.Expand();
-
-                        table.AddColumn(new TableColumn("[bold yellow]Category[/]").Centered());
-                        table.AddColumn(new TableColumn("[bold cyan]Description[/]").Centered());
-                        table.AddColumn(new TableColumn("[bold green]Status[/]").Centered());
-
                         foreach (var task in userTasks!)
                         {
                             (string fg, string bg) = task.Category switch
@@ -295,10 +294,10 @@ static class Program
 
 
                         }
-                        AnsiConsole.Write(table);
 
-                        dashboardAction = "/task-settings";
                     }
+                    AnsiConsole.Write(table);
+                    dashboardAction = "/task-settings";
                 }
                 else if (dashboardAction == "/task-settings")
                 {
@@ -313,7 +312,8 @@ static class Program
                             "[bold yellow]/update-task[/]",
                             "[bold red]/delete-task[/]",
                             "[bold magenta]/delete-all[/]",
-                            "[bold cyan]/exit[/]"
+                            "[bold orange1]/logout[/]",
+                            "[bold red1]/exit[/]"
                         )
                     );
                     string cleanAction = settingAction
@@ -321,7 +321,8 @@ static class Program
                         .Replace("[bold yellow]", "")
                         .Replace("[bold red]", "")
                         .Replace("[bold magenta]", "")
-                        .Replace("[bold cyan]", "")
+                        .Replace("[bold orange1]", "")
+                        .Replace("[bold red1]", "")
                         .Replace("[/]", "")
                         .Trim();
 
@@ -331,6 +332,11 @@ static class Program
                     {
                         error = "";
                         exitApp = true;
+                        break;
+                    }
+                    if (cleanAction == "/logout")
+                    {
+                        error = "";
                         break;
                     }
 
@@ -350,6 +356,7 @@ static class Program
                     else if (cleanAction == "/delete-all")
                     {
                         error = "";
+                        dashboardAction = "/delete-all";
                     }
 
 
