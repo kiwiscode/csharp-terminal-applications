@@ -39,11 +39,13 @@ public class TaskController
 
         var newTask = new _Task
         {
+            Id = Guid.NewGuid(),
             Username = username,
             Description = taskDescription,
             Category = taskCategory,
             Status = status
         };
+
 
         // Add to the list
         loadedTasks.Add(newTask);
@@ -52,6 +54,18 @@ public class TaskController
         TaskDataUtils.SaveTasks(loadedTasks);
 
         return HttpStatus.CREATED;
+    }
+
+    public static int DeleteTask(string? username, Guid taskId)
+    {
+
+        var loadedTasks = TaskDataUtils.LoadTasks();
+
+        var filteredTasks = loadedTasks.Where((t) => t.Id != taskId).ToList();
+
+        TaskDataUtils.SaveTasks(filteredTasks);
+
+        return HttpStatus.OK;
     }
 
 
@@ -65,4 +79,6 @@ public class TaskController
 
         return HttpStatus.OK;
     }
+
+
 }

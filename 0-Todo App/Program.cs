@@ -42,7 +42,7 @@ static class Program
 
 
 
-                    string username = AnsiConsole.Ask<string>("[bold rgb(85,88,253)]Your username:[/]");
+                    username = AnsiConsole.Ask<string>("[bold rgb(85,88,253)]Your username:[/]");
 
 
                     var password = AnsiConsole.Prompt(
@@ -67,9 +67,6 @@ static class Program
                         }
                         else if (result == HttpStatus.OK)
                         {
-                            repeatAuthModeQuestion = false;
-                            keepDashboard = true;
-                            dashboardAction = "/tasks";
                             using (var progress = new ProgressBar())
                             {
                                 for (int i = 0; i <= 100; i++)
@@ -79,6 +76,9 @@ static class Program
                                 }
                             }
                             AnsiConsole.MarkupLine($"[bold green]👋 Welcome to your dashboard, [underline yellow]{username}[/]![/]");
+                            repeatAuthModeQuestion = false;
+                            keepDashboard = true;
+                            dashboardAction = "/tasks";
                         }
                     }
 
@@ -89,7 +89,7 @@ static class Program
                 {
 
 
-                    string username = AnsiConsole.Ask<string>("[bold rgb(85,88,253)]Please enter your username:[/]");
+                    username = AnsiConsole.Ask<string>("[bold rgb(85,88,253)]Please enter your username:[/]");
                     var password = AnsiConsole.Prompt(
                     new TextPrompt<string>("[bold rgb(85,88,253)]Please enter your password:[/]")
                      .Secret()
@@ -119,7 +119,7 @@ static class Program
                                     Thread.Sleep(20);
                                 }
                             }
-                            Console.WriteLine($"Welcome to your dashboard {username} 👋");
+                            AnsiConsole.MarkupLine($"[bold green]👋 Welcome to your dashboard, [underline yellow]{username}[/]![/]");
                             repeatAuthModeQuestion = false;
                             keepDashboard = true;
                             dashboardAction = "/tasks";
@@ -233,7 +233,76 @@ static class Program
 
                 }
                 else if (dashboardAction == "/update-task") { }
-                else if (dashboardAction == "/delete-task") { }
+                else if (dashboardAction == "/delete-task")
+                {
+                    var (userTasks, result) = TaskController.GetTasks(username);
+
+                    if (result == HttpStatus.NOT_FOUND || userTasks == null || !userTasks.Any())
+                    {
+                        AnsiConsole.MarkupLine("[red]No tasks found to delete.[/]");
+                        dashboardAction = "/tasks";
+                    }
+                    else
+                    {
+                        var taskChoices = userTasks.Select((t, index) =>
+                            new
+                            {
+                                Display = $"[yellow]{index + 1}.[/] [cyan]{t.Description}[/] [grey]({t.Category})[/] [dim]{t.Status}[/]",
+                                Id = t.Id
+                            }).ToList();
+
+                        var selected = AnsiConsole.Prompt(
+                            new SelectionPrompt<string>()
+                                .Title("[bold red]Select a task to delete:[/]")
+                                .PageSize(10)
+                                .AddChoices(taskChoices.Select(t => t.Display))
+                        );
+
+                        var selectedTask = taskChoices.First(t => t.Display == selected);
+
+                        bool confirmDelete = AnsiConsole.Confirm($"[bold red]Are you sure you want to delete this task?[/]\n{selected}");
+
+                        if (confirmDelete)
+                        {
+                            int deleteResult = TaskController.DeleteTask(username, selectedTask.Id);
+
+                            if (deleteResult == HttpStatus.OK)
+                            {
+                                AnsiConsole.MarkupLine("[green]Task deleted successfully![/]");
+
+                                AnsiConsole.Progress()
+                                                .Start(ctx =>
+                                                {
+                                                    var showTasks = ctx.AddTask("[green]Tasks loading[/]", maxValue: 100);
+                                                    while (!showTasks.IsFinished)
+                                                    {
+                                                        showTasks.Increment(1.5);
+                                                        Thread.Sleep(50);
+                                                    }
+                                                });
+
+                            }
+
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[yellow]Task deletion canceled.[/]");
+                            AnsiConsole.Progress()
+                            .Start(ctx =>
+                            {
+                                var showTasks = ctx.AddTask("[green]Tasks loading[/]", maxValue: 100);
+                                while (!showTasks.IsFinished)
+                                {
+                                    showTasks.Increment(1.5);
+                                    Thread.Sleep(50);
+                                }
+                            });
+                        }
+
+                        dashboardAction = "/tasks";
+                    }
+                }
+
                 else if (dashboardAction == "/delete-all")
                 {
                     bool confirm = AnsiConsole.Confirm("[bold yellow]Do you want to delete all tasks?[/]");
@@ -359,30 +428,60 @@ static class Program
                 {
 
 
-                    var settingAction = AnsiConsole.Prompt(
-                    new SelectionPrompt<string>()
-                        .Title("[bold rgb(85,88,253)]What do you want to do?[/]")
-                        .PageSize(10)
-                        .AddChoices(
-                            "[bold green]/create-task[/]",
-                            "[bold yellow]/update-task[/]",
-                            "[bold red]/delete-task[/]",
-                            "[bold magenta]/delete-all[/]",
-                            "[bold orange1]/logout[/]",
-                            "[bold red1]/exit[/]"
-                        )
-                    );
-                    string cleanAction = settingAction
-                        .Replace("[bold green]", "")
-                        .Replace("[bold yellow]", "")
-                        .Replace("[bold red]", "")
-                        .Replace("[bold magenta]", "")
-                        .Replace("[bold orange1]", "")
-                        .Replace("[bold red1]", "")
-                        .Replace("[/]", "")
-                        .Trim();
-
                     var (userTasks, result) = TaskController.GetTasks(username);
+
+                    string cleanAction = "";
+
+
+
+                    if (result == HttpStatus.NOT_FOUND)
+                    {
+                        var settingAction = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title("[bold rgb(85,88,253)]What do you want to do?[/]")
+                            .PageSize(10)
+                            .AddChoices(
+                                "[bold green]/create-task[/]",
+                                "[bold orange1]/logout[/]",
+                                "[bold red1]/exit[/]"
+                            )
+                        );
+                        cleanAction = settingAction
+                           .Replace("[bold green]", "")
+                           .Replace("[bold orange1]", "")
+                           .Replace("[bold red1]", "")
+                           .Replace("[/]", "")
+                           .Trim();
+
+                    }
+                    else
+                    {
+                        var settingAction = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title("[bold rgb(85,88,253)]What do you want to do?[/]")
+                            .PageSize(10)
+                            .AddChoices(
+                                "[bold green]/create-task[/]",
+                                "[bold yellow]/update-task[/]",
+                                "[bold red]/delete-task[/]",
+                                "[bold magenta]/delete-all[/]",
+                                "[bold orange1]/logout[/]",
+                                "[bold red1]/exit[/]"
+                            )
+                        );
+                        cleanAction = settingAction
+                           .Replace("[bold green]", "")
+                           .Replace("[bold yellow]", "")
+                           .Replace("[bold red]", "")
+                           .Replace("[bold magenta]", "")
+                           .Replace("[bold orange1]", "")
+                           .Replace("[bold red1]", "")
+                           .Replace("[/]", "")
+                           .Trim();
+                    }
+
+
+
 
                     if (cleanAction == "/exit")
                     {
@@ -404,6 +503,7 @@ static class Program
                     else if (cleanAction == "/delete-task")
                     {
                         error = "";
+                        dashboardAction = "/delete-task";
                     }
                     else if (cleanAction == "/update-task")
                     {
