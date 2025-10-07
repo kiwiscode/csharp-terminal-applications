@@ -80,5 +80,30 @@ public class TaskController
         return HttpStatus.OK;
     }
 
+    public static int UpdateTask(string? username, _Task updatedTask)
+    {
+        var loadedTasks = TaskDataUtils.LoadTasks();
+
+        if (loadedTasks == null || !loadedTasks.Any())
+        {
+            return HttpStatus.NOT_FOUND;
+        }
+
+        var existingTask = loadedTasks.FirstOrDefault(t => t.Id == updatedTask.Id && t.Username == username);
+
+        if (existingTask == null)
+        {
+            return HttpStatus.NOT_FOUND;
+        }
+
+        existingTask.Description = updatedTask.Description;
+        existingTask.Category = updatedTask.Category;
+        existingTask.Status = updatedTask.Status;
+
+        TaskDataUtils.SaveTasks(loadedTasks);
+
+        return HttpStatus.OK;
+    }
+
 
 }

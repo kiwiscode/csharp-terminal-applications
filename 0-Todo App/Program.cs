@@ -232,7 +232,159 @@ static class Program
 
 
                 }
-                else if (dashboardAction == "/update-task") { }
+                else if (dashboardAction == "/update-task")
+                {
+                    var (userTasks, result) = TaskController.GetTasks(username);
+
+                    string cleanAction = "";
+
+
+                    if (result == HttpStatus.NOT_FOUND || userTasks == null || !userTasks.Any())
+                    {
+                        AnsiConsole.MarkupLine("[red]No tasks found to update.[/]");
+                        dashboardAction = "/tasks";
+                    }
+                    else
+                    {
+                        var taskChoices = userTasks.Select((t, index) =>
+                           new
+                           {
+                               Display = $"[yellow]{index + 1}.[/] [cyan]{t.Description}[/] [grey]({t.Category})[/] [dim]{t.Status}[/]",
+                               Id = t.Id
+                           }).ToList();
+
+                        var selected = AnsiConsole.Prompt(
+                            new SelectionPrompt<string>()
+                                .Title("[bold rgb(85,88,253)]Select a task to update:[/]")
+                                .PageSize(10)
+                                .AddChoices(taskChoices.Select(t => t.Display))
+                        );
+
+                        var selectedTask = taskChoices.First(t => t.Display == selected);
+                        var taskToUpdate = userTasks.First(t => t.Id == selectedTask.Id);
+
+                        var fieldToUpdate = AnsiConsole.Prompt(
+    new SelectionPrompt<string>()
+        .Title("[bold rgb(85,88,253)]Which field do you want to update?[/]")
+        .AddChoices(
+            "[yellow]Category[/]",
+            "[cyan]Description[/]",
+            "[green]Status[/]"
+        )
+);
+                        cleanAction = fieldToUpdate
+                            .Replace("[yellow]", "")
+                            .Replace("[cyan]", "")
+                            .Replace("[green]", "")
+                            .Replace("[/]", "")
+                            .Trim();
+                        if (cleanAction == "Description")
+                        {
+                            var newDescription = AnsiConsole.Ask<string>("[bold rgb(85,88,253)]Enter new description:[/]");
+                            bool confirm = AnsiConsole.Confirm($"[bold yellow]Update description to[/] [italic]{newDescription}[/]?");
+                            if (confirm)
+                            {
+                                taskToUpdate.Description = newDescription;
+                                TaskController.UpdateTask(username, taskToUpdate);
+                                AnsiConsole.MarkupLine("[green]Description updated successfully![/]");
+                            }
+                        }
+                        else if (cleanAction == "Category")
+                        {
+                            var categoryChoices = new Dictionary<string, string>
+    {
+        { "Work", "[rgb(0,0,0) on rgb(254,203,95)] Work [/]" },
+        { "Personal", "[rgb(0,0,0) on rgb(225,133,242)] Personal [/]" },
+        { "Family", "[rgb(0,0,0) on rgb(190,229,253)] Family [/]" },
+        { "Pet", "[rgb(0,0,0) on rgb(166,255,235)] Pet [/]" }
+    };
+
+                            var newCategoryDisplay = AnsiConsole.Prompt(
+                                new SelectionPrompt<string>()
+                                    .Title("[bold rgb(85,88,253)]Select a new category:[/]")
+                                    .PageSize(10)
+                                    .AddChoices(categoryChoices.Values)
+                            );
+
+                            var newCategory = categoryChoices.First(c => c.Value == newCategoryDisplay).Key;
+
+                            bool confirm = AnsiConsole.Confirm($"[bold yellow]Update category to[/] [italic]{newCategory}[/]?");
+                            if (confirm)
+                            {
+                                taskToUpdate.Category = newCategory;
+                                TaskController.UpdateTask(username, taskToUpdate);
+
+                                (string fg, string bg) = newCategory switch
+                                {
+                                    "Work" => ("rgb(0,0,0)", "rgb(254,203,95)"),
+                                    "Personal" => ("rgb(0,0,0)", "rgb(225,133,242)"),
+                                    "Family" => ("rgb(0,0,0)", "rgb(190,229,253)"),
+                                    "Pet" => ("rgb(0,0,0)", "rgb(166,255,235)"),
+                                    _ => ("white", "black")
+                                };
+
+                                AnsiConsole.MarkupLine($"[green]Category updated successfully to:[/] [{fg} on {bg}] {newCategory} [/]");
+                            }
+                        }
+                        else if (cleanAction == "Status")
+                        {
+                            var newStatus = AnsiConsole.Prompt(
+    new SelectionPrompt<string>()
+        .Title("[bold rgb(85,88,253)]Select a new status:[/]")
+        .PageSize(10)
+        .AddChoices(
+            "[yellow]Todo[/]",
+            "[rgb(85,170,255)]In Progress[/]",
+            "[green]Completed[/]"
+        )
+);
+
+                            string cleanStatus = newStatus
+                                .Replace("[yellow]", "")
+                                .Replace("[rgb(85,170,255)]", "")
+                                .Replace("[green]", "")
+                                .Replace("[/]", "")
+                                .Trim();
+
+                            string statusColored = cleanStatus switch
+                            {
+                                "Todo" => "[yellow]Todo[/]",
+                                "In Progress" => "[rgb(85,170,255)]In Progress[/]",
+                                "Completed" => "[green]Completed[/]",
+                                _ => cleanStatus
+                            };
+
+                            bool confirm = AnsiConsole.Confirm($"[bold yellow]Update status to[/] {statusColored}?");
+                            if (confirm)
+                            {
+                                taskToUpdate.Status = cleanStatus;
+                                TaskController.UpdateTask(username, taskToUpdate);
+
+                                AnsiConsole.MarkupLine("[green]Status updated successfully![/]");
+                            }
+
+                        }
+
+
+
+                        AnsiConsole.Progress()
+                                .Start(ctx =>
+                                {
+                                    var showTasks = ctx.AddTask("[green]Tasks loading[/]", maxValue: 100);
+                                    while (!showTasks.IsFinished)
+                                    {
+                                        showTasks.Increment(1.5);
+                                        Thread.Sleep(50);
+                                    }
+                                });
+
+                        dashboardAction = "/tasks";
+
+
+
+                    }
+
+                }
                 else if (dashboardAction == "/delete-task")
                 {
                     var (userTasks, result) = TaskController.GetTasks(username);
@@ -410,7 +562,7 @@ static class Program
                             string statusMarkup = task.Status switch
                             {
                                 "Todo" => "[yellow]Todo[/]",
-                                "In Progress" => "[blue]In Progress[/]",
+                                "In Progress" => "[rgb(85,170,255)]In Progress[/]",
                                 "Completed" => "[green]Completed[/]",
                                 _ => task.Status
                             };
@@ -508,6 +660,8 @@ static class Program
                     else if (cleanAction == "/update-task")
                     {
                         error = "";
+                        dashboardAction = "/update-task";
+
                     }
                     else if (cleanAction == "/delete-all")
                     {
