@@ -4,7 +4,7 @@ This repository is where I share the terminal applications I create while learni
 
 ## Applications
 
-- **0-Todo App** → A simple todo list manager (Work in progres)
+- **0-Todo App** → A simple todo list manager ~~(Work in progress)~~ ✅ Completed
 
 ## How to Run
 
