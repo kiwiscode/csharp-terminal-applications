@@ -19,4 +19,38 @@ public static class Utils
         return JsonSerializer.Deserialize<List<Product>>(json) ?? new List<Product>();
     }
 
+
+    public static void AddItem()
+    {
+        Console.WriteLine("Add Item");
+    }
+    public static void ListItems()
+    {
+        Console.WriteLine("List Items");
+    }
+    public static void DeleteItem()
+    {
+        Console.WriteLine("Delete Item");
+    }
+    public static void UpdateItem()
+    {
+        Console.WriteLine("Update Item");
+    }
+    public static void TotalValue()
+    {
+        Console.WriteLine("Total Value");
+    }
+    public static void SearchItem()
+    {
+        Console.WriteLine("Search Item");
+    }
+    public static void LowStock()
+    {
+        Console.WriteLine("Low Stock");
+    }
+    public static void ExportToCSV()
+    {
+        Console.WriteLine("Export To CSV");
+    }
+
 }
