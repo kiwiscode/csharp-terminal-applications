@@ -1,5 +1,6 @@
 using System.Text.Json;
 using inventory_tracker.Models;
+using static Globals;
 
 
 public static class Utils
@@ -20,9 +21,16 @@ public static class Utils
     }
 
 
-    public static void AddItem()
+    public static void AddItem(string name, int quantity, decimal unitPrice)
     {
-        Console.WriteLine("Add Item");
+
+        var loadedProducts = LoadProducts();
+        var newProduct = new Product { Id = Guid.NewGuid(), Name = name, Quantity = 3, UnitPrice = 300.75m };
+
+        loadedProducts.Add(newProduct);
+
+        SaveProducts(loadedProducts);
+
     }
     public static void ListItems()
     {
