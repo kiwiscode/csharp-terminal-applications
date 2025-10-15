@@ -75,7 +75,6 @@ static class Program
             // additional (search, lowstock, import csv & export csv, history => command history, inventory backup)
 
 
-            Console.ReadLine();
         } while (!exitApp);
 
 
