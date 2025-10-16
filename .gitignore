@@ -58,3 +58,4 @@ TestResults/
 *.userprefs
 *tasks.json
 *users.json
+*inventory.json
