@@ -45,6 +45,40 @@ public static class Utils
     {
         var loadedProducts = LoadProducts();
 
+        if (loadedProducts.Count == 0)
+        {
+            var emptyTable = CreateTable(new List<Product>());
+            AnsiConsole.Write(emptyTable);
+            return;
+        }
+
+        int pageSize = 10;
+        int page = 0;
+
+        while (true)
+        {
+            var pageItems = loadedProducts.Skip(page * pageSize).Take(pageSize).ToList();
+            if (pageItems.Count == 0)
+            {
+                Console.WriteLine("No more products.");
+                break;
+            }
+
+            var table = CreateTable(pageItems);
+            AnsiConsole.Write(table);
+
+            Console.WriteLine($"\nPage {page + 1} of {Math.Ceiling(loadedProducts.Count / (double)pageSize)}");
+            Console.WriteLine("[Enter] Next page, [B] Previous page, [Q] Quit");
+
+            var key = Console.ReadKey(true).Key;
+            if (key == ConsoleKey.Q) break;
+            if (key == ConsoleKey.B && page > 0) page--;
+            else if (key == ConsoleKey.Enter) page++;
+        }
+    }
+
+    private static Table CreateTable(List<Product> products)
+    {
         var table = new Table();
         table.Title = new TableTitle("[bold underline rgb(85,88,253)]Inventory[/]");
         table.Border = TableBorder.Rounded;
@@ -57,7 +91,7 @@ public static class Utils
         table.AddColumn(new TableColumn("[bold cyan]Unit Price[/]").Centered());
         table.AddColumn(new TableColumn("[bold magenta]Total Value[/]").Centered());
 
-        if (loadedProducts.Count == 0)
+        if (products.Count == 0)
         {
             table.ShowRowSeparators();
             table.AddRow(
@@ -71,21 +105,21 @@ public static class Utils
         }
         else
         {
-            foreach (var product in loadedProducts)
+            foreach (var product in products)
             {
                 table.ShowRowSeparators();
                 table.AddRow(
-                product.Name ?? "",
-                product.Model ?? "",
-                product.Description ?? "",
-                product.Quantity.ToString(),
-                product.UnitPrice.ToString("C"),
-                product.TotalValue.ToString("C")
-            );
+                    product.Name ?? "",
+                    product.Model ?? "",
+                    product.Description ?? "",
+                    product.Quantity.ToString(),
+                    product.UnitPrice.ToString("C"),
+                    product.TotalValue.ToString("C")
+                );
             }
         }
 
-        AnsiConsole.Write(table);
+        return table;
     }
 
     public static void DeleteItem()

@@ -14,59 +14,39 @@ static class Program
         if (!File.Exists("inventory.json"))
         {
             // Mock products
-            InventoryList.AddRange(new List<Product>
-            {
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Laptop",
-                    Model = "Dell XPS 15",
-                    Description = "High performance laptop",
-                    Quantity = 5,
-                    UnitPrice = 1200.50m
-                },
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Mouse",
-                    Model = "Logitech MX Master 3",
-                    Description = "Wireless ergonomic mouse",
-                    Quantity = 10,
-                    UnitPrice = 25.99m
-                },
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Keyboard",
-                    Model = "Corsair K95",
-                    Description = "Mechanical gaming keyboard",
-                    Quantity = 7,
-                    UnitPrice = 45.00m
-                },
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Monitor",
-                    Model = "Dell U2723QM",
-                    Description = "27-inch 4K monitor",
-                    Quantity = 3,
-                    UnitPrice = 300.75m
-                },
-                new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "USB Cable",
-                    Model = "Anker USB-C",
-                    Description = "Fast charging cable",
-                    Quantity = 15,
-                    UnitPrice = 10.50m
-                }
-            });
+            var mockProducts = new List<Product>();
+            var random = new Random();
 
+            string[] productNames = { "Laptop", "Mouse", "Keyboard", "Monitor", "USB Cable", "Headphones", "Webcam", "Printer", "Speaker", "External HDD" };
+            string[] models = { "Model A", "Model B", "Model C", "Model D", "Model E" };
+            string[] descriptions = { "High performance", "Ergonomic", "Gaming", "Wireless", "Portable", "Professional", "Budget", "Premium" };
+
+            for (int i = 0; i < 100; i++) // 100 product
+            {
+                var name = productNames[random.Next(productNames.Length)];
+                var model = models[random.Next(models.Length)] + " " + (i + 1);
+                var description = descriptions[random.Next(descriptions.Length)] + " " + name.ToLower();
+                var quantity = random.Next(1, 20);
+                var unitPrice = Math.Round((decimal)(random.NextDouble() * 500 + 10), 2);
+
+                mockProducts.Add(new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    Model = model,
+                    Description = description,
+                    Quantity = quantity,
+                    UnitPrice = unitPrice
+                });
+            }
+
+            InventoryList.AddRange(mockProducts);
 
             // Save products
             Utils.SaveProducts(InventoryList);
         }
+
+
         do
         {
 
@@ -90,9 +70,6 @@ static class Program
                     .AddChoices(choices.Keys.ToArray())
                     .UseConverter(i => choices[i])
             );
-
-
-            Console.WriteLine($"Selected action: {action}");
 
             switch (action)
             {
