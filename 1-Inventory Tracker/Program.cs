@@ -16,12 +16,53 @@ static class Program
             // Mock products
             InventoryList.AddRange(new List<Product>
             {
-                new Product { Id = Guid.NewGuid(), Name = "Laptop", Quantity = 5, UnitPrice = 1200.50m },
-                new Product { Id = Guid.NewGuid(), Name = "Mouse", Quantity = 10, UnitPrice = 25.99m },
-                new Product { Id = Guid.NewGuid(), Name = "Keyboard", Quantity = 7, UnitPrice = 45.00m },
-                new Product { Id = Guid.NewGuid(), Name = "Monitor", Quantity = 3, UnitPrice = 300.75m },
-                new Product { Id = Guid.NewGuid(), Name = "USB Cable", Quantity = 15, UnitPrice = 10.50m }
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Laptop",
+                    Model = "Dell XPS 15",
+                    Description = "High performance laptop",
+                    Quantity = 5,
+                    UnitPrice = 1200.50m
+                },
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Mouse",
+                    Model = "Logitech MX Master 3",
+                    Description = "Wireless ergonomic mouse",
+                    Quantity = 10,
+                    UnitPrice = 25.99m
+                },
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Keyboard",
+                    Model = "Corsair K95",
+                    Description = "Mechanical gaming keyboard",
+                    Quantity = 7,
+                    UnitPrice = 45.00m
+                },
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Monitor",
+                    Model = "Dell U2723QM",
+                    Description = "27-inch 4K monitor",
+                    Quantity = 3,
+                    UnitPrice = 300.75m
+                },
+                new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "USB Cable",
+                    Model = "Anker USB-C",
+                    Description = "Fast charging cable",
+                    Quantity = 15,
+                    UnitPrice = 10.50m
+                }
             });
+
 
             // Save products
             Utils.SaveProducts(InventoryList);

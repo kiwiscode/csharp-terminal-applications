@@ -8,6 +8,10 @@ namespace inventory_tracker.Models
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
 
+        public string? Model { get; set; } = "";
+
+        public string? Description { get; set; } = "";
+
         public decimal TotalValue => Quantity * UnitPrice;
     }
 }

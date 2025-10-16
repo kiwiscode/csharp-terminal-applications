@@ -1,6 +1,9 @@
 using System.Text.Json;
 using inventory_tracker.Models;
 using static Globals;
+using Spectre.Console;
+
+
 
 
 public static class Utils
@@ -21,11 +24,17 @@ public static class Utils
     }
 
 
-    public static void AddItem(string name, int quantity, decimal unitPrice)
+    public static void AddItem()
     {
 
+        var name = AnsiConsole.Ask<string>("[bold green]Enter product name:[/]");
+        var model = AnsiConsole.Ask<string>("[bold blue]Enter product model:[/]");
+        var description = AnsiConsole.Ask<string>("[bold grey]Enter product description:[/]");
+        var quantity = AnsiConsole.Ask<int>("[bold yellow]Enter quantity:[/]");
+        var unitPrice = AnsiConsole.Ask<decimal>("[bold cyan]Enter unit price:[/]");
+
         var loadedProducts = LoadProducts();
-        var newProduct = new Product { Id = Guid.NewGuid(), Name = name, Quantity = 3, UnitPrice = 300.75m };
+        var newProduct = new Product { Id = Guid.NewGuid(), Name = name, Model = model, Description = description, Quantity = quantity, UnitPrice = unitPrice };
 
         loadedProducts.Add(newProduct);
 
@@ -34,8 +43,51 @@ public static class Utils
     }
     public static void ListItems()
     {
-        Console.WriteLine("List Items");
+        var loadedProducts = LoadProducts();
+
+        var table = new Table();
+        table.Title = new TableTitle("[bold underline rgb(85,88,253)]Inventory[/]");
+        table.Border = TableBorder.Rounded;
+        table.Expand();
+
+        table.AddColumn(new TableColumn("[bold yellow]Name[/]").Centered());
+        table.AddColumn(new TableColumn("[bold blue]Model[/]").Centered());
+        table.AddColumn(new TableColumn("[bold grey]Description[/]").Centered());
+        table.AddColumn(new TableColumn("[bold green]Quantity[/]").Centered());
+        table.AddColumn(new TableColumn("[bold cyan]Unit Price[/]").Centered());
+        table.AddColumn(new TableColumn("[bold magenta]Total Value[/]").Centered());
+
+        if (loadedProducts.Count == 0)
+        {
+            table.ShowRowSeparators();
+            table.AddRow(
+                new Markup("[grey]-[/]"),
+                new Markup("[grey]-[/]"),
+                new Markup("[grey]-[/]"),
+                new Markup("[grey]-[/]"),
+                new Markup("[grey]-[/]"),
+                new Markup("[grey]-[/]")
+            );
+        }
+        else
+        {
+            foreach (var product in loadedProducts)
+            {
+                table.ShowRowSeparators();
+                table.AddRow(
+                product.Name ?? "",
+                product.Model ?? "",
+                product.Description ?? "",
+                product.Quantity.ToString(),
+                product.UnitPrice.ToString("C"),
+                product.TotalValue.ToString("C")
+            );
+            }
+        }
+
+        AnsiConsole.Write(table);
     }
+
     public static void DeleteItem()
     {
         Console.WriteLine("Delete Item");
