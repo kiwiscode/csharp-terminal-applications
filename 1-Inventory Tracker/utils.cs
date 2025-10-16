@@ -67,8 +67,10 @@ public static class Utils
             var table = CreateTable(pageItems);
             AnsiConsole.Write(table);
 
-            Console.WriteLine($"\nPage {page + 1} of {Math.Ceiling(loadedProducts.Count / (double)pageSize)}");
-            Console.WriteLine("[Enter] Next page, [B] Previous page, [Q] Quit");
+
+            AnsiConsole.MarkupLine($"\nPage [yellow]{page + 1}[/] of [yellow]{Math.Ceiling(loadedProducts.Count / (double)pageSize)}[/]");
+            AnsiConsole.MarkupLine("[grey]Enter : Next page | B : Previous page | Q : Quit[/]");
+
 
             var key = Console.ReadKey(true).Key;
             if (key == ConsoleKey.Q) break;
@@ -77,7 +79,7 @@ public static class Utils
         }
     }
 
-    private static Table CreateTable(List<Product> products)
+    private static Table CreateTable(List<Product> products, int selectedIndex = -1)
     {
         var table = new Table();
         table.Title = new TableTitle("[bold underline rgb(85,88,253)]Inventory[/]");
@@ -105,27 +107,125 @@ public static class Utils
         }
         else
         {
-            foreach (var product in products)
+            for (int i = 0; i < products.Count; i++)
             {
+                var product = products[i];
                 table.ShowRowSeparators();
-                table.AddRow(
-                    product.Name ?? "",
-                    product.Model ?? "",
-                    product.Description ?? "",
-                    product.Quantity.ToString(),
-                    product.UnitPrice.ToString("C"),
-                    product.TotalValue.ToString("C")
-                );
+
+                if (i == selectedIndex)
+                {
+                    table.AddRow(
+                        $"[black on cyan]{product.Name}[/]",
+                        $"[black on cyan]{product.Model}[/]",
+                        $"[black on cyan]{product.Description}[/]",
+                        $"[black on cyan]{product.Quantity}[/]",
+                        $"[black on cyan]{product.UnitPrice:C}[/]",
+                        $"[black on cyan]{product.TotalValue:C}[/]"
+                    );
+                }
+                else
+                {
+                    table.AddRow(
+                        product.Name ?? "",
+                        product.Model ?? "",
+                        product.Description ?? "",
+                        product.Quantity.ToString(),
+                        product.UnitPrice.ToString("C"),
+                        product.TotalValue.ToString("C")
+                    );
+                }
             }
         }
 
         return table;
     }
 
+
     public static void DeleteItem()
     {
-        Console.WriteLine("Delete Item");
+        var loadedProducts = LoadProducts();
+
+        if (loadedProducts.Count == 0)
+        {
+            var emptyTable = CreateTable(new List<Product>());
+            AnsiConsole.Write(emptyTable);
+            return;
+        }
+
+        int pageSize = 10;
+        int page = 0;
+        int selectedIndex = 0;
+
+        while (true)
+        {
+            var pageItems = loadedProducts.Skip(page * pageSize).Take(pageSize).ToList();
+            if (pageItems.Count == 0)
+            {
+                Console.Clear();
+                AnsiConsole.MarkupLine("[red]No more products.[/]");
+                break;
+            }
+
+            Console.Clear();
+
+            var table = CreateTable(pageItems, selectedIndex);
+            AnsiConsole.Write(table);
+
+            AnsiConsole.MarkupLine($"\nPage [yellow]{page + 1}[/] of [yellow]{Math.Ceiling(loadedProducts.Count / (double)pageSize)}[/]");
+            AnsiConsole.MarkupLine("[grey]↑ ↓ : Move | Enter : Delete | B : Previous page | N : Next page | Q : Quit[/]");
+
+            var key = Console.ReadKey(true).Key;
+
+            if (key == ConsoleKey.Q)
+                break;
+
+            if (key == ConsoleKey.UpArrow)
+                selectedIndex = (selectedIndex == 0) ? pageItems.Count - 1 : selectedIndex - 1;
+            else if (key == ConsoleKey.DownArrow)
+                selectedIndex = (selectedIndex + 1) % pageItems.Count;
+
+            else if (key == ConsoleKey.B && page > 0)
+            {
+                page--;
+                selectedIndex = 0;
+            }
+            else if (key == ConsoleKey.N)
+            {
+                if ((page + 1) * pageSize < loadedProducts.Count)
+                {
+                    page++;
+                    selectedIndex = 0;
+                }
+            }
+
+            else if (key == ConsoleKey.Enter)
+            {
+                var itemToDelete = pageItems[selectedIndex];
+                bool confirm = AnsiConsole.Confirm($"Delete [red]{itemToDelete.Name}[/]?");
+                if (confirm)
+                {
+                    loadedProducts.Remove(itemToDelete);
+                    SaveProducts(loadedProducts);
+
+                    AnsiConsole.MarkupLine($"[red]{itemToDelete.Name} deleted![/]");
+                    System.Threading.Thread.Sleep(700);
+
+                    if (page * pageSize >= loadedProducts.Count && page > 0)
+                        page--;
+
+                    selectedIndex = 0;
+                }
+
+                if (loadedProducts.Count == 0)
+                {
+                    Console.Clear();
+                    AnsiConsole.MarkupLine("[red]All products deleted![/]");
+                    break;
+                }
+            }
+        }
     }
+
     public static void UpdateItem()
     {
         Console.WriteLine("Update Item");

@@ -10,7 +10,6 @@ static class Program
     static void Main()
     {
 
-
         if (!File.Exists("inventory.json"))
         {
             // Mock products
