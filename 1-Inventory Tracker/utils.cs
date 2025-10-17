@@ -330,10 +330,6 @@ public static class Utils
         }
     }
 
-    public static void TotalValue()
-    {
-        Console.WriteLine("Total Value");
-    }
     public static void SearchItem()
     {
         Console.WriteLine("Search Item");

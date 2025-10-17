@@ -55,10 +55,9 @@ static class Program
     {2, "[bold blue]List Items[/]"},
     {3, "[bold red]Delete Item[/]"},
     {4, "[bold orange1]Update Item[/]"},
-    {5, "[bold deepskyblue1]Total Value[/]"},
-    {6, "[bold white]Search[/]"},
-    {7, "[bold darkred]Low Stock Items[/]"},
-    {8, "[bold magenta]Export to CSV[/]"},
+    {5, "[bold white]Search[/]"},
+    {6, "[bold darkred]Low Stock Items[/]"},
+    {7, "[bold magenta]Export to CSV[/]"},
     {0, "[bold red3]Exit[/]"}
 };
 
@@ -76,10 +75,9 @@ static class Program
                 case 2: Utils.ListItems(); break;
                 case 3: Utils.DeleteItem(); break;
                 case 4: Utils.UpdateItem(); break;
-                case 5: Utils.TotalValue(); break;
-                case 6: Utils.SearchItem(); break;
-                case 7: Utils.LowStock(); break;
-                case 8: Utils.ExportToCSV(); break;
+                case 5: Utils.SearchItem(); break;
+                case 6: Utils.LowStock(); break;
+                case 7: Utils.ExportToCSV(); break;
                 case 0: exitApp = true; break;
                 default: Console.WriteLine("Invalid Choice"); break;
             }
