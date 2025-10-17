@@ -14,7 +14,6 @@ public static class Utils
         string json = JsonSerializer.Serialize(productList, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText("inventory.json", json);
     }
-
     public static List<Product> LoadProducts()
     {
         if (!File.Exists("inventory.json")) return new List<Product>();
@@ -22,7 +21,6 @@ public static class Utils
         string json = File.ReadAllText("inventory.json");
         return JsonSerializer.Deserialize<List<Product>>(json) ?? new List<Product>();
     }
-
 
     public static void AddItem()
     {
@@ -47,10 +45,12 @@ public static class Utils
 
         if (loadedProducts.Count == 0)
         {
+            Console.Clear();
             var emptyTable = CreateTable(new List<Product>());
             AnsiConsole.Write(emptyTable);
             return;
         }
+
 
         int pageSize = 10;
         int page = 0;
@@ -60,9 +60,12 @@ public static class Utils
             var pageItems = loadedProducts.Skip(page * pageSize).Take(pageSize).ToList();
             if (pageItems.Count == 0)
             {
+                Console.Clear();
                 Console.WriteLine("No more products.");
                 break;
             }
+
+            Console.Clear();
 
             var table = CreateTable(pageItems);
             AnsiConsole.Write(table);
@@ -75,7 +78,13 @@ public static class Utils
             var key = Console.ReadKey(true).Key;
             if (key == ConsoleKey.Q) break;
             if (key == ConsoleKey.B && page > 0) page--;
-            else if (key == ConsoleKey.Enter) page++;
+            else if (key == ConsoleKey.Enter)
+            {
+                if ((page + 1) * pageSize < loadedProducts.Count)
+                {
+                    page++;
+                }
+            }
         }
     }
 
@@ -139,7 +148,6 @@ public static class Utils
 
         return table;
     }
-
 
     public static void DeleteItem()
     {
@@ -228,8 +236,100 @@ public static class Utils
 
     public static void UpdateItem()
     {
-        Console.WriteLine("Update Item");
+        var loadedProducts = LoadProducts();
+
+        if (loadedProducts.Count == 0)
+        {
+            var emptyTable = CreateTable(new List<Product>());
+            AnsiConsole.Write(emptyTable);
+            return;
+        }
+
+        int pageSize = 10;
+        int page = 0;
+        int selectedIndex = 0;
+
+        while (true)
+        {
+            var pageItems = loadedProducts.Skip(page * pageSize).Take(pageSize).ToList();
+            if (pageItems.Count == 0)
+            {
+                Console.Clear();
+                AnsiConsole.MarkupLine("[red]No more products.[/]");
+                break;
+            }
+
+            Console.Clear();
+
+            var table = CreateTable(pageItems, selectedIndex);
+            AnsiConsole.Write(table);
+
+            AnsiConsole.MarkupLine($"\nPage [yellow]{page + 1}[/] of [yellow]{Math.Ceiling(loadedProducts.Count / (double)pageSize)}[/]");
+            AnsiConsole.MarkupLine("[grey]↑ ↓ : Move | Enter : Update | B : Previous page | N : Next page | Q : Quit[/]");
+
+            var key = Console.ReadKey(true).Key;
+
+            if (key == ConsoleKey.Q)
+                break;
+
+            if (key == ConsoleKey.UpArrow)
+                selectedIndex = (selectedIndex == 0) ? pageItems.Count - 1 : selectedIndex - 1;
+            else if (key == ConsoleKey.DownArrow)
+                selectedIndex = (selectedIndex + 1) % pageItems.Count;
+
+            else if (key == ConsoleKey.B && page > 0)
+            {
+                page--;
+                selectedIndex = 0;
+            }
+            else if (key == ConsoleKey.N)
+            {
+                if ((page + 1) * pageSize < loadedProducts.Count)
+                {
+                    page++;
+                    selectedIndex = 0;
+                }
+            }
+
+            else if (key == ConsoleKey.Enter)
+            {
+                var itemToUpdate = pageItems[selectedIndex];
+                var existingItem = loadedProducts.FirstOrDefault(p => p.Id == itemToUpdate.Id);
+
+                if (existingItem != null)
+                {
+                    Console.Clear();
+                    AnsiConsole.MarkupLine($"[bold underline]Updating {existingItem.Name}[/]\n");
+
+                    var newName = AnsiConsole.Ask<string>($"Name ([grey]{existingItem.Name}[/]):");
+                    if (!string.IsNullOrWhiteSpace(newName)) existingItem.Name = newName;
+
+                    var newModel = AnsiConsole.Ask<string>($"Model ([grey]{existingItem.Model}[/]):");
+                    if (!string.IsNullOrWhiteSpace(newModel)) existingItem.Model = newModel;
+
+                    var newDescription = AnsiConsole.Ask<string>($"Description ([grey]{existingItem.Description}[/]):");
+                    if (!string.IsNullOrWhiteSpace(newDescription)) existingItem.Description = newDescription;
+
+                    var newQuantityInput = AnsiConsole.Ask<string>($"Quantity ([grey]{existingItem.Quantity}[/]):");
+                    if (int.TryParse(newQuantityInput, out int newQuantity)) existingItem.Quantity = newQuantity;
+
+                    var newPriceInput = AnsiConsole.Ask<string>($"Unit Price ([grey]{existingItem.UnitPrice}[/]):");
+                    if (decimal.TryParse(newPriceInput, out decimal newPrice)) existingItem.UnitPrice = newPrice;
+
+                    SaveProducts(loadedProducts);
+
+                    AnsiConsole.MarkupLine($"[green]{existingItem.Name} updated![/]");
+                    System.Threading.Thread.Sleep(700);
+
+                    if (page * pageSize >= loadedProducts.Count && page > 0)
+                        page--;
+
+                    selectedIndex = 0;
+                }
+            }
+        }
     }
+
     public static void TotalValue()
     {
         Console.WriteLine("Total Value");
