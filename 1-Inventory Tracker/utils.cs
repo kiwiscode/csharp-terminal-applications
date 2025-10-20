@@ -332,12 +332,140 @@ public static class Utils
 
     public static void SearchItem()
     {
-        Console.WriteLine("Search Item");
+        var loadedProducts = LoadProducts();
+
+        if (loadedProducts.Count == 0)
+        {
+            Console.Clear();
+            var emptyTable = CreateTable(new List<Product>());
+            AnsiConsole.Write(emptyTable);
+            return;
+        }
+
+        while (true)
+        {
+            Console.Clear();
+            AnsiConsole.MarkupLine("[bold underline cyan]Search Products[/]\n");
+
+            var searchTerm = AnsiConsole.Ask<string>("[bold green]Enter keyword (or leave empty to exit):[/]");
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                break;
+
+            searchTerm = searchTerm.ToLower();
+
+            var matchedProducts = loadedProducts
+                .Where(p =>
+                    (!string.IsNullOrEmpty(p.Name) && p.Name.ToLower().Contains(searchTerm)) ||
+                    (!string.IsNullOrEmpty(p.Model) && p.Model.ToLower().Contains(searchTerm)) ||
+                    (!string.IsNullOrEmpty(p.Description) && p.Description.ToLower().Contains(searchTerm))
+                ).ToList();
+
+            if (matchedProducts.Count == 0)
+            {
+                Console.Clear();
+                AnsiConsole.MarkupLine($"[red]No products found for:[/] [bold]{searchTerm}[/]\n");
+                AnsiConsole.MarkupLine("[grey]Press any key to search again...[/]");
+                Console.ReadKey(true);
+                continue;
+            }
+
+            int pageSize = 10;
+            int page = 0;
+
+            while (true)
+            {
+                var pageItems = matchedProducts.Skip(page * pageSize).Take(pageSize).ToList();
+
+                Console.Clear();
+                var resultTable = CreateTable(pageItems);
+                AnsiConsole.Write(resultTable);
+
+                AnsiConsole.MarkupLine($"\n[yellow]{matchedProducts.Count}[/] product(s) found matching [bold]{searchTerm}[/]\n");
+                AnsiConsole.MarkupLine($"\nPage [yellow]{page + 1}[/] of [yellow]{Math.Ceiling(matchedProducts.Count / (double)pageSize)}[/]");
+                AnsiConsole.MarkupLine("[grey]Enter : Next page | B : Previous page | S : Search again | Q : Quit[/]");
+
+                var key = Console.ReadKey(true).Key;
+
+                if (key == ConsoleKey.Q)
+                    return;
+                else if (key == ConsoleKey.S)
+                    break;
+                else if (key == ConsoleKey.B && page > 0)
+                    page--;
+                else if (key == ConsoleKey.Enter)
+                {
+                    if ((page + 1) * pageSize < matchedProducts.Count)
+                        page++;
+                }
+            }
+        }
     }
+
     public static void LowStock()
     {
-        Console.WriteLine("Low Stock");
+        var loadedProducts = LoadProducts();
+
+        if (loadedProducts.Count == 0)
+        {
+            Console.Clear();
+            var emptyTable = CreateTable(new List<Product>());
+            AnsiConsole.Write(emptyTable);
+            return;
+        }
+
+        Console.Clear();
+        AnsiConsole.MarkupLine("[bold underline yellow]Low Stock Check[/]\n");
+
+        var thresholdInput = AnsiConsole.Ask<string>(
+            "[bold green]Show products with quantity less than or equal to (default 3):[/]"
+        );
+
+        int threshold = 3;
+        if (int.TryParse(thresholdInput, out int parsed))
+            threshold = parsed;
+
+        var lowStockProducts = loadedProducts
+            .Where(p => p.Quantity <= threshold)
+            .OrderBy(p => p.Quantity)
+            .ToList();
+
+        Console.Clear();
+
+        if (lowStockProducts.Count == 0)
+        {
+            AnsiConsole.MarkupLine($"[green]All products are above {threshold} in stock![/]");
+            return;
+        }
+
+        int pageSize = 10;
+        int page = 0;
+
+        while (true)
+        {
+            var pageItems = lowStockProducts.Skip(page * pageSize).Take(pageSize).ToList();
+
+            Console.Clear();
+            var table = CreateTable(pageItems);
+            AnsiConsole.Write(table);
+
+            AnsiConsole.MarkupLine($"\n[yellow]{lowStockProducts.Count}[/] product(s) with quantity ≤ [bold]{threshold}[/]\n");
+            AnsiConsole.MarkupLine($"\nPage [yellow]{page + 1}[/] of [yellow]{Math.Ceiling(lowStockProducts.Count / (double)pageSize)}[/]");
+            AnsiConsole.MarkupLine("[grey]Enter : Next page | B : Previous page | Q : Quit[/]");
+
+            var key = Console.ReadKey(true).Key;
+
+            if (key == ConsoleKey.Q)
+                break;
+            else if (key == ConsoleKey.B && page > 0)
+                page--;
+            else if (key == ConsoleKey.Enter)
+            {
+                if ((page + 1) * pageSize < lowStockProducts.Count)
+                    page++;
+            }
+        }
     }
+
     public static void ExportToCSV()
     {
         Console.WriteLine("Export To CSV");
