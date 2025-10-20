@@ -468,7 +468,40 @@ public static class Utils
 
     public static void ExportToCSV()
     {
-        Console.WriteLine("Export To CSV");
+        var loadedProducts = LoadProducts();
+
+        if (loadedProducts.Count == 0)
+        {
+            Console.Clear();
+            AnsiConsole.MarkupLine("[red]No products found to export![/]");
+            return;
+        }
+
+        var fileName = $"inventory_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        var csvPath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+        using (var writer = new StreamWriter(csvPath))
+        {
+            // CSV Header
+            writer.WriteLine("Id,Name,Model,Description,Quantity,UnitPrice,TotalValue");
+
+            // CSV Rows
+            foreach (var product in loadedProducts)
+            {
+                string safeName = product.Name?.Replace(",", " ") ?? "";
+                string safeModel = product.Model?.Replace(",", " ") ?? "";
+                string safeDesc = product.Description?.Replace(",", " ") ?? "";
+
+                writer.WriteLine($"{product.Id},{safeName},{safeModel},{safeDesc},{product.Quantity},{product.UnitPrice},{product.TotalValue}");
+            }
+        }
+
+        Console.Clear();
+        AnsiConsole.MarkupLine($"[green]Export successful![/]");
+        AnsiConsole.MarkupLine($"[bold]File saved as:[/] [yellow]{csvPath}[/]");
+        AnsiConsole.MarkupLine("\n[grey]Press any key to return...[/]");
+        Console.ReadKey(true);
     }
+
 
 }
