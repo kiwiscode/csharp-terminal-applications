@@ -5,7 +5,7 @@ This repository is where I share the terminal applications I create while learni
 ## Applications
 
 - **0-Todo App** → A simple todo list manager ~~(Work in progress)~~ ✅ Completed
-- **1-Inventory Tracker** → A simple app to manage and track your inventory items (Work in progress)
+- **1-Inventory Tracker** → A simple app to manage and track your inventory items ~~(Work in progress)~~ ✅ Completed
 
 ## How to Run
 
